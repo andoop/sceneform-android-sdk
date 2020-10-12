@@ -33,8 +33,11 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
+import com.google.ar.core.TrackingState;
 import com.google.ar.sceneform.AnchorNode;
+import com.google.ar.sceneform.FrameTime;
 import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
@@ -59,6 +62,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
     private List<CustomPose> poses = new ArrayList<>();
     private List<CustomPose> poses2 = new ArrayList<>();
+    private boolean hasCreated;
 
 
     @Override
@@ -100,79 +104,6 @@ public class HelloSceneformActivity extends AppCompatActivity {
             .build()
             .thenAccept(renderable -> viewRenderable2 = renderable);
 
-        arFragment.setOnTapArPlaneListener(
-            (HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
-                if (andyRenderable == null) {
-                    return;
-                }
-
-                // Create the Anchor.
-         /* Anchor anchor = hitResult.createAnchor();
-          AnchorNode anchorNode = new AnchorNode(anchor);
-          anchorNode.setParent(arFragment.getArSceneView().getScene());
-
-          // Create the transformable andy and add it to the anchor.
-          TransformableNode andy = new TransformableNode(arFragment.getTransformationSystem());
-          andy.setParent(anchorNode);
-          andy.setRenderable(viewRenderable);
-          andy.select();*/
-
-                float[] translate = new float[]{0f, 0f, 0f};
-                float[] rotate = new float[]{0f, 0f, 0f, 0f};
-
-                Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(new Pose(translate, rotate));
-                // Anchor anchor = hitResult.createAnchor();
-                AnchorNode anchorNode = new AnchorNode(anchor);
-                anchorNode.setParent(arFragment.getArSceneView().getScene());
-                Node root = new Node();
-           /* Node node = new Node();
-            node.setParent(root);
-            node.setLocalPosition(new Vector3(0f,0.5f,0f));
-            node.setRenderable(viewRenderable);
-
-            Node node2 = new Node();
-            node2.setParent(root);
-            node2.setLocalPosition(new Vector3(0f,-0.5f,0f));
-            node2.setRenderable(viewRenderable);
-
-            Node node3 = new Node();
-            node3.setParent(root);
-            node3.setLocalPosition(new Vector3(0.5f,0f,0f));
-            node3.setRenderable(viewRenderable);
-
-            Node node4 = new Node();
-            node4.setParent(root);
-            node4.setLocalPosition(new Vector3(-0.5f,0f,0f));
-            node4.setRenderable(viewRenderable);
-
-            Node node5 = new Node();
-            node5.setParent(root);
-            node5.setLocalPosition(new Vector3(0f,0f,0.5f));
-            node5.setRenderable(viewRenderable);
-
-            Node node6 = new Node();
-            node6.setParent(root);
-            node6.setLocalPosition(new Vector3(-0f,0f,-0.5f));
-            node6.setRenderable(viewRenderable);*/
-
-                for (CustomPose pose : poses) {
-                    Node node = new Node();
-                    node.setParent(root);
-                    node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
-                    node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
-                    node.setRenderable(viewRenderable);
-                }
-
-                for (CustomPose pose : poses2) {
-                    Node node = new Node();
-                    node.setParent(root);
-                    node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
-                    node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
-                    node.setRenderable(viewRenderable2);
-                }
-                anchorNode.addChild(root);
-            });
-
         arFragment.setOnSessionInitializationListener(new BaseArFragment.OnSessionInitializationListener() {
             @Override
             public void onSessionInitialization(Session session) {
@@ -181,7 +112,49 @@ public class HelloSceneformActivity extends AppCompatActivity {
             }
         });
 
-        // arFragment
+
+        arFragment.getArSceneView().getScene().addOnUpdateListener(new Scene.OnUpdateListener() {
+            @Override
+            public void onUpdate(FrameTime frameTime) {
+                if (arFragment.getArSceneView().getArFrame().getCamera().getTrackingState() != TrackingState.TRACKING) {
+                    return;
+                }
+
+                if (!hasCreated) {
+                    createNodes();
+                    hasCreated = true;
+                }
+
+            }
+        });
+    }
+
+    private void createNodes() {
+        float[] translate = new float[]{0f, 0f, 0f};
+        float[] rotate = new float[]{0f, 0f, 0f, 0f};
+
+        Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(new Pose(translate, rotate));
+        // Anchor anchor = hitResult.createAnchor();
+        AnchorNode anchorNode = new AnchorNode(anchor);
+        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        Node root = new Node();
+
+        for (CustomPose pose : poses) {
+            Node node = new Node();
+            node.setParent(root);
+            node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
+            node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
+            node.setRenderable(viewRenderable);
+        }
+
+        for (CustomPose pose : poses2) {
+            Node node = new Node();
+            node.setParent(root);
+            node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
+            node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
+            node.setRenderable(viewRenderable2);
+        }
+        anchorNode.addChild(root);
     }
 
     private void initPoses() {
