@@ -58,7 +58,6 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private static final double MIN_OPENGL_VERSION = 3.0;
 
     private ArFragment arFragment;
-    private ModelRenderable andyRenderable;
     private ViewRenderable viewRenderable;
     private ViewRenderable viewRenderable2;
 
@@ -81,29 +80,14 @@ public class HelloSceneformActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ux);
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
-        // When you build a Renderable, Sceneform loads its resources in the background while returning
-        // a CompletableFuture. Call thenAccept(), handle(), or check isDone() before calling get().
-        ModelRenderable.builder()
-            .setSource(this, R.raw.andy)
-            .build()
-            .thenAccept(renderable -> andyRenderable = renderable)
-            .exceptionally(
-                throwable -> {
-                    Toast toast =
-                        Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                    return null;
-                });
-
         ViewRenderable.builder()
             .setView(this, R.layout.layout_already_shot)
             .setSizer(new ViewSizer() {
                 @Override
                 public Vector3 getSize(View view) {
                     Vector3 vector3 = new Vector3();
-                    vector3.x = 0.07f;
-                    vector3.y = 0.07f;
+                    vector3.x = 0.05f;
+                    vector3.y = 0.05f;
                     return vector3;
                 }
             })
@@ -116,8 +100,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 @Override
                 public Vector3 getSize(View view) {
                     Vector3 vector3 = new Vector3();
-                    vector3.x = 0.05f;
-                    vector3.y = 0.05f;
+                    vector3.x = 0.04f;
+                    vector3.y = 0.04f;
                     return vector3;
                 }
             })
@@ -179,7 +163,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
     private void initPoses() {
         int count = 12;
-        float dis = 0.4f;
+        float dis = 0.6f;
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
@@ -200,7 +184,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
     private void initPoses2() {
         int count = 12;
-        float dis = 0.4f * 0.7f;
+        float dis = 0.6f * 0.7f;
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
