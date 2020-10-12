@@ -21,17 +21,12 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
-import com.google.ar.core.HitResult;
-import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
@@ -41,14 +36,10 @@ import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.Light;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.PlaneRenderer;
-import com.google.ar.sceneform.rendering.Texture;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.rendering.ViewSizer;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
-import com.google.ar.sceneform.ux.TransformableNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +58,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private List<CustomPose> poses = new ArrayList<>();
     private List<CustomPose> poses2 = new ArrayList<>();
     private boolean hasCreated;
+    private boolean hasStartShot;
+    private Node mRootNode;
 
 
     @Override
@@ -82,7 +75,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_ux);
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
-        if(arFragment.getPlaneDiscoveryController()!=null){
+        if (arFragment.getPlaneDiscoveryController() != null) {
             arFragment.getPlaneDiscoveryController().hide();
             arFragment.getPlaneDiscoveryController().setInstructionView(null);
         }
@@ -95,8 +88,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 @Override
                 public Vector3 getSize(View view) {
                     Vector3 vector3 = new Vector3();
-                    vector3.x = 0.05f;
-                    vector3.y = 0.05f;
+                    vector3.x = 0.06f;
+                    vector3.y = 0.06f;
                     return vector3;
                 }
             })
@@ -109,8 +102,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 @Override
                 public Vector3 getSize(View view) {
                     Vector3 vector3 = new Vector3();
-                    vector3.x = 0.04f;
-                    vector3.y = 0.04f;
+                    vector3.x = 0.05f;
+                    vector3.y = 0.05f;
                     return vector3;
                 }
             })
@@ -139,11 +132,22 @@ public class HelloSceneformActivity extends AppCompatActivity {
                     createNodes();
                     hasCreated = true;
                 }
+                if(hasCreated){
+                    updateNodes();
+                }
+
+            }
+        });
+
+        findViewById(R.id.btShot).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hasStartShot = true;
+                v.setVisibility(View.GONE);
 
             }
         });
     }
-
     private void createNodes() {
         float[] translate = new float[]{0f, 0f, 0f};
         float[] rotate = new float[]{0f, 0f, 0f, 0f};
@@ -152,11 +156,11 @@ public class HelloSceneformActivity extends AppCompatActivity {
         // Anchor anchor = hitResult.createAnchor();
         AnchorNode anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
-        Node root = new Node();
+        mRootNode = new Node();
 
         for (CustomPose pose : poses) {
             Node node = new Node();
-            node.setParent(root);
+            node.setParent(mRootNode);
             node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
             node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
             node.setRenderable(viewRenderable);
@@ -164,17 +168,25 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
         for (CustomPose pose : poses2) {
             Node node = new Node();
-            node.setParent(root);
+            node.setParent(mRootNode);
             node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
             node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
             node.setRenderable(viewRenderable2);
         }
-        anchorNode.addChild(root);
+        anchorNode.addChild(mRootNode);
     }
+
+    private void updateNodes() {
+        if(!hasStartShot){
+            Vector3 localPosition = arFragment.getArSceneView().getScene().getCamera().getLocalPosition();
+            mRootNode.setLocalPosition(localPosition);
+        }
+    }
+
 
     private void initPoses() {
         int count = 12;
-        float dis = 0.6f;
+        float dis = 0.55f;
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
@@ -197,7 +209,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
     private void initPoses2() {
         int count = 12;
-        float dis = 0.6f * 0.7f;
+        float dis = 0.55f * 0.7f;
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
