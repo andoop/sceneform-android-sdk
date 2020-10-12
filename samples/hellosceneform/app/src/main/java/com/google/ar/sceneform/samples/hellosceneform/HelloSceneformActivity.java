@@ -40,7 +40,10 @@ import com.google.ar.sceneform.FrameTime;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.Light;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.PlaneRenderer;
+import com.google.ar.sceneform.rendering.Texture;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.rendering.ViewSizer;
 import com.google.ar.sceneform.ux.ArFragment;
@@ -79,7 +82,13 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_ux);
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
+        if(arFragment.getPlaneDiscoveryController()!=null){
+            arFragment.getPlaneDiscoveryController().hide();
+            arFragment.getPlaneDiscoveryController().setInstructionView(null);
+        }
 
+        //去除平面纹理
+        arFragment.getArSceneView().getPlaneRenderer().setEnabled(false);
         ViewRenderable.builder()
             .setView(this, R.layout.layout_already_shot)
             .setSizer(new ViewSizer() {
@@ -117,6 +126,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
         });
 
 
+        //关闭投影
+        arFragment.getArSceneView().getScene().getSunlight().setLight(Light.builder(Light.Type.POINT).setShadowCastingEnabled(false).build());
         arFragment.getArSceneView().getScene().addOnUpdateListener(new Scene.OnUpdateListener() {
             @Override
             public void onUpdate(FrameTime frameTime) {
