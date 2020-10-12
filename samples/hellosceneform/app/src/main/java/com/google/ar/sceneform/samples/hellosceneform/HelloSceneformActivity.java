@@ -26,6 +26,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
@@ -41,6 +42,7 @@ import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.google.ar.sceneform.rendering.ViewSizer;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
@@ -96,11 +98,29 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
         ViewRenderable.builder()
             .setView(this, R.layout.layout_already_shot)
+            .setSizer(new ViewSizer() {
+                @Override
+                public Vector3 getSize(View view) {
+                    Vector3 vector3 = new Vector3();
+                    vector3.x = 0.07f;
+                    vector3.y = 0.07f;
+                    return vector3;
+                }
+            })
             .build()
             .thenAccept(renderable -> viewRenderable = renderable);
 
         ViewRenderable.builder()
             .setView(this, R.layout.layout_shot_circle)
+            .setSizer(new ViewSizer() {
+                @Override
+                public Vector3 getSize(View view) {
+                    Vector3 vector3 = new Vector3();
+                    vector3.x = 0.05f;
+                    vector3.y = 0.05f;
+                    return vector3;
+                }
+            })
             .build()
             .thenAccept(renderable -> viewRenderable2 = renderable);
 
