@@ -178,13 +178,15 @@ public class HelloSceneformActivity extends AppCompatActivity {
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
-            float[] translate = new float[]{(float) (dis * Math.cos(angle * i)), (float) (dis * Math.sin(angle)), (float) (dis * Math.sin(angle * i))};
+            double v = dis * Math.cos(angle * i);
+            double v1 = dis * Math.sin(angle * i);
+            float[] translate = new float[]{(float) v, (float) (dis * Math.sin(angle)), (float) v1};
             EulerAngles eulerAngles = new EulerAngles((float) (Math.toRadians(360 - 30 * i - 90)), 0, (float) Math.toRadians(30));
             Quaternion quaternion = eulerAngles.ToQuaternion();
             float[] rotate = new float[]{quaternion.x, quaternion.y, quaternion.z, quaternion.w};
             poses.add(new CustomPose(translate, rotate));
 
-            float[] translate2 = new float[]{-(float) (dis * Math.cos(angle * i)), -(float) (dis * Math.sin(angle)), (float) (dis * Math.sin(angle * i))};
+            float[] translate2 = new float[]{-(float) v, -(float) (dis * Math.sin(angle)), (float) v1};
             EulerAngles eulerAngles2 = new EulerAngles(-(float) (Math.toRadians(360 - 30 * i - 90)), 0, (float) Math.toRadians(-30));
             Quaternion quaternion2 = eulerAngles2.ToQuaternion();
             float[] rotate2 = new float[]{quaternion2.x, quaternion2.y, quaternion2.z, quaternion2.w};
@@ -199,13 +201,15 @@ public class HelloSceneformActivity extends AppCompatActivity {
         double angle = Math.toRadians(30);
         double angle2 = Math.toRadians(60);
         for (int i = 0; i < count; i++) {
-            float[] translate = new float[]{(float) (dis * Math.cos(angle * i)), (float) (dis * Math.sin(angle)), (float) (dis * Math.sin(angle * i))};
+            double v = dis * Math.cos(angle * i);
+            double v1 = dis * Math.sin(angle * i);
+            float[] translate = new float[]{(float) v, (float) (dis * Math.sin(angle)), (float) v1};
             EulerAngles eulerAngles = new EulerAngles((float) (Math.toRadians(360 - 30 * i - 90)), 0, (float) Math.toRadians(30));
             Quaternion quaternion = eulerAngles.ToQuaternion();
             float[] rotate = new float[]{quaternion.x, quaternion.y, quaternion.z, quaternion.w};
             poses2.add(new CustomPose(translate, rotate));
 
-            float[] translate2 = new float[]{-(float) (dis * Math.cos(angle * i)), -(float) (dis * Math.sin(angle)), (float) (dis * Math.sin(angle * i))};
+            float[] translate2 = new float[]{-(float) v, -(float) (dis * Math.sin(angle)), (float) v1};
             EulerAngles eulerAngles2 = new EulerAngles(-(float) (Math.toRadians(360 - 30 * i - 90)), 0, (float) Math.toRadians(-30));
             Quaternion quaternion2 = eulerAngles2.ToQuaternion();
             float[] rotate2 = new float[]{quaternion2.x, quaternion2.y, quaternion2.z, quaternion2.w};
