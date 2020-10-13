@@ -95,8 +95,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                     @Override
                     public Vector3 getSize(View view) {
                         Vector3 vector3 = new Vector3();
-                        vector3.x = 0.06f;
-                        vector3.y = 0.06f;
+                        vector3.x = 0.055f;
+                        vector3.y = 0.055f;
                         return vector3;
                     }
                 })
@@ -110,8 +110,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 @Override
                 public Vector3 getSize(View view) {
                     Vector3 vector3 = new Vector3();
-                    vector3.x = 0.05f;
-                    vector3.y = 0.05f;
+                    vector3.x = 0.045f;
+                    vector3.y = 0.045f;
                     return vector3;
                 }
             })
@@ -188,7 +188,6 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 for (int i = 0; i < hitTestResults.size(); i++) {
                     HitTestResult hitTestResult = hitTestResults.get(i);
                     Node node = hitTestResult.getNode();
-                    Log.e("---------", node.getName());
                     if (node.getName().startsWith("a")) {
                         Renderable renderable = node.getRenderable();
                         if (renderable instanceof ViewRenderable) {

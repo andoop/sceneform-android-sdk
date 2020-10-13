@@ -25,14 +25,14 @@
       android:layout_height="match_parent" />
 
     <ImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:src="@drawable/bead"
         android:layout_gravity="center"/>
 
     <ImageView
-        android:layout_width="65dp"
-        android:layout_height="65dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:src="@drawable/shotcross"
         android:layout_gravity="center"/>
 
