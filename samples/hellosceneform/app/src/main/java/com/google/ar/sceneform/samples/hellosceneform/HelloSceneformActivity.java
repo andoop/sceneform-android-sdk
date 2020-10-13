@@ -15,6 +15,8 @@
  */
 package com.google.ar.sceneform.samples.hellosceneform;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -57,7 +59,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
     private ArFragment arFragment;
     private List<ViewRenderable> viewRenderables = new ArrayList<>();
-    private ViewRenderable viewRenderable2;
+    private List<ViewRenderable> viewRenderables2 = new ArrayList<>();
 
     private List<CustomPose> poses = new ArrayList<>();
     private List<CustomPose> poses2 = new ArrayList<>();
@@ -104,19 +106,24 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 .thenAccept(renderable -> viewRenderables.add(renderable));
 
         }
-        ViewRenderable.builder()
-            .setView(this, R.layout.layout_shot_circle)
-            .setSizer(new ViewSizer() {
-                @Override
-                public Vector3 getSize(View view) {
-                    Vector3 vector3 = new Vector3();
-                    vector3.x = 0.045f;
-                    vector3.y = 0.045f;
-                    return vector3;
-                }
-            })
-            .build()
-            .thenAccept(renderable -> viewRenderable2 = renderable);
+        //初始化24个 circle 纹理
+        for (int i = 0; i < 24; i++) {
+            ViewRenderable.builder()
+                .setView(this, R.layout.layout_shot_circle)
+                .setSizer(new ViewSizer() {
+                    @Override
+                    public Vector3 getSize(View view) {
+                        Vector3 vector3 = new Vector3();
+                        vector3.x = 0.045f;
+                        vector3.y = 0.045f;
+                        return vector3;
+                    }
+                })
+                .build()
+                .thenAccept(renderable -> viewRenderables2.add(renderable));
+
+        }
+
 
         arFragment.setOnSessionInitializationListener(new BaseArFragment.OnSessionInitializationListener() {
             @Override
@@ -184,6 +191,19 @@ public class HelloSceneformActivity extends AppCompatActivity {
         Frame arFrame = arFragment.getArSceneView().getArFrame();
         if (arFrame.getCamera().getTrackingState() == TrackingState.TRACKING) {
             ArrayList<HitTestResult> hitTestResults = arFragment.getArSceneView().getScene().hitTestAll(arFragment.getArSceneView().getScene().getCamera().screenPointToRay(ScreenUtils.getScreenWidth(this) / 2, ScreenUtils.getScreenHeight(this) / 2));
+            for (int i = 0; i < hitTestResults.size(); i++) {
+                HitTestResult hitTestResult = hitTestResults.get(i);
+                Renderable renderable = hitTestResult.getNode().getRenderable();
+                if (renderable instanceof ViewRenderable) {
+                    ViewRenderable viewRenderable = (ViewRenderable) renderable;
+                    ImageView layer = viewRenderable.getView().findViewById(R.id.ivLayer);
+                    ObjectAnimator alpha = ObjectAnimator.ofFloat(layer, "alpha", 0f, 1f);
+                    alpha.setDuration(100);
+                    alpha.setRepeatCount(1);
+                    alpha.start();
+                }
+            }
+
             if (hitTestResults.size() == 2 && hitTestResults.get(0).getNode().getName().startsWith("b") && hitTestResults.get(1).getNode().getName().startsWith("a")) {
                 for (int i = 0; i < hitTestResults.size(); i++) {
                     HitTestResult hitTestResult = hitTestResults.get(i);
@@ -228,7 +248,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
             node.setParent(mRootNode);
             node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
             node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
-            node.setRenderable(viewRenderable2);
+            node.setRenderable(viewRenderables2.get(i));
         }
 
         anchorNode.addChild(mRootNode);
