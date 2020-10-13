@@ -67,6 +67,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private boolean hasStartShot;
     private Node mRootNode;
     private Timer timer = new Timer();
+    private SoundPlayer soundPlayer = new SoundPlayer();
+    private int flashSound;
 
 
     @Override
@@ -86,6 +88,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
             arFragment.getPlaneDiscoveryController().hide();
             arFragment.getPlaneDiscoveryController().setInstructionView(null);
         }
+
+        flashSound = soundPlayer.preLoad(this, R.raw.flash);
 
         //去除平面纹理
         arFragment.getArSceneView().getPlaneRenderer().setEnabled(false);
@@ -187,6 +191,12 @@ public class HelloSceneformActivity extends AppCompatActivity {
         timer.stop();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundPlayer.release();
+    }
+
     private void tryToShot() {
         Frame arFrame = arFragment.getArSceneView().getArFrame();
         if (arFrame.getCamera().getTrackingState() == TrackingState.TRACKING) {
@@ -214,7 +224,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
                             ViewRenderable viewRenderable = (ViewRenderable) renderable;
                             ImageView layer = viewRenderable.getView().findViewById(R.id.ivLayer);
                             layer.setImageResource(R.drawable.already_shot);
-                            node.setName("shot_"+node.getName());
+                            node.setName("shot_" + node.getName());
+                            soundPlayer.play(flashSound);
                         }
                     }
                 }
