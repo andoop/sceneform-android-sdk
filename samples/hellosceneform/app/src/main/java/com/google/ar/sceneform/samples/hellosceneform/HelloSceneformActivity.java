@@ -20,11 +20,15 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -34,6 +38,7 @@ import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
 import com.google.ar.sceneform.HitTestResult;
@@ -69,6 +74,11 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private Timer timer = new Timer();
     private SoundPlayer soundPlayer = new SoundPlayer();
     private int flashSound;
+    private TextureView textureView;
+    private ImageView ivPreview;
+    private AnchorNode anchorNode;
+    boolean oneShot;//拍摄一次，首先要移除所有node
+    boolean oneShot2;//获取一下图片，然后重新添加node
 
 
     @Override
@@ -83,6 +93,29 @@ public class HelloSceneformActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_ux);
+        textureView = findViewById(R.id.textureView);
+        ivPreview = findViewById(R.id.ivPreView);
+        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                arFragment.getArSceneView().getRenderer().startMirroring(new Surface(surface),0,0,width,height);
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                return false;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+                Log.e("-----------1111111111",String.valueOf(surface.getTimestamp()));
+            }
+        });
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
         if (arFragment.getPlaneDiscoveryController() != null) {
             arFragment.getPlaneDiscoveryController().hide();
@@ -137,6 +170,24 @@ public class HelloSceneformActivity extends AppCompatActivity {
             }
         });
 
+        arFragment.getArSceneView().getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+
+            }
+        });
+
+        //new SurfaceTexture()
 
         //关闭投影
         arFragment.getArSceneView().getScene().getSunlight().setLight(Light.builder(Light.Type.POINT).setShadowCastingEnabled(false).build());
@@ -155,6 +206,16 @@ public class HelloSceneformActivity extends AppCompatActivity {
                     updateNodes();
                 }
 
+                if(oneShot2){
+                    oneShot2=false;
+                    ivPreview.setImageBitmap(textureView.getBitmap());
+                    anchorNode.addChild(mRootNode);
+                }
+                if(oneShot){
+                    mRootNode.getParent().removeChild(mRootNode);
+                    oneShot = false;
+                    oneShot2 = true;
+                }
             }
         });
 
@@ -226,6 +287,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
                             layer.setImageResource(R.drawable.already_shot);
                             node.setName("shot_" + node.getName());
                             soundPlayer.play(flashSound);
+                            oneShot = true;
                         }
                     }
                 }
@@ -239,7 +301,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
         float[] rotate = new float[]{0f, 0f, 0f, 0f};
 
         Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(new Pose(translate, rotate));
-        AnchorNode anchorNode = new AnchorNode(anchor);
+        anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
         mRootNode = new Node();
 

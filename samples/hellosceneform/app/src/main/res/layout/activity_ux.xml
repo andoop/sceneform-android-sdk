@@ -19,32 +19,42 @@
     android:layout_height="match_parent"
     tools:context=".HelloSceneformActivity">
 
-  <fragment android:name="com.google.ar.sceneform.ux.ArFragment"
-      android:id="@+id/ux_fragment"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent" />
+    <fragment
+        android:id="@+id/ux_fragment"
+        android:name="com.google.ar.sceneform.ux.ArFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <ImageView
         android:layout_width="25dp"
         android:layout_height="25dp"
-        android:src="@drawable/bead"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:src="@drawable/bead" />
 
     <ImageView
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:src="@drawable/shotcross"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:src="@drawable/shotcross" />
 
 
     <ImageView
         android:id="@+id/btShot"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:src="@drawable/shot"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="30dp"/>
+        android:layout_marginBottom="30dp"
+        android:src="@drawable/shot" />
 
 
+    <TextureView
+        android:id="@+id/textureView"
+        android:layout_width="100dp"
+        android:layout_height="200dp"/>
 
+    <ImageView
+        android:id="@+id/ivPreView"
+        android:layout_width="100dp"
+        android:layout_height="200dp"
+        android:layout_gravity="right"/>
 </FrameLayout>
