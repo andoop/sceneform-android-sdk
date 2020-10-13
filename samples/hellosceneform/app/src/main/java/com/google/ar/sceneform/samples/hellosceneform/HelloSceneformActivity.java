@@ -16,7 +16,6 @@
 package com.google.ar.sceneform.samples.hellosceneform;
 
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -38,7 +37,6 @@ import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
-import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
 import com.google.ar.sceneform.HitTestResult;
@@ -77,8 +75,8 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private TextureView textureView;
     private ImageView ivPreview;
     private AnchorNode anchorNode;
-    boolean oneShot;//拍摄一次，首先要移除所有node
-    boolean oneShot2;//获取一下图片，然后重新添加node
+    boolean shotOnce;//拍摄一次，首先要移除所有node
+    boolean takeOnce;//获取一下图片，然后重新添加node
 
 
     @Override
@@ -108,12 +106,13 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
             @Override
             public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                arFragment.getArSceneView().getRenderer().stopMirroring(new Surface(surface));
                 return false;
             }
 
             @Override
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-                Log.e("-----------1111111111",String.valueOf(surface.getTimestamp()));
+
             }
         });
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
@@ -206,15 +205,15 @@ public class HelloSceneformActivity extends AppCompatActivity {
                     updateNodes();
                 }
 
-                if(oneShot2){
-                    oneShot2=false;
+                if(takeOnce){
+                    takeOnce =false;
                     ivPreview.setImageBitmap(textureView.getBitmap());
                     anchorNode.addChild(mRootNode);
                 }
-                if(oneShot){
+                if(shotOnce){
                     mRootNode.getParent().removeChild(mRootNode);
-                    oneShot = false;
-                    oneShot2 = true;
+                    shotOnce = false;
+                    takeOnce = true;
                 }
             }
         });
@@ -236,26 +235,6 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (hasStartShot) {
-            timer.star();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        timer.stop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        soundPlayer.release();
     }
 
     private void tryToShot() {
@@ -287,7 +266,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
                             layer.setImageResource(R.drawable.already_shot);
                             node.setName("shot_" + node.getName());
                             soundPlayer.play(flashSound);
-                            oneShot = true;
+                            shotOnce = true;
                         }
                     }
                 }
@@ -379,6 +358,27 @@ public class HelloSceneformActivity extends AppCompatActivity {
             poses2.add(new CustomPose(translate2, rotate2));
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (hasStartShot) {
+            timer.star();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        timer.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundPlayer.release();
+    }
+
 
     /**
      * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
