@@ -15,4 +15,7 @@
 -->
 <resources>
     <string name="app_name">VR手机拍</string>
+    <string name="hello">Hello World, DiceActivity!</string>
+    <string name="risk">拨动离手! 谁小谁请客...</string>
+    <string name="about">关于</string>
 </resources>

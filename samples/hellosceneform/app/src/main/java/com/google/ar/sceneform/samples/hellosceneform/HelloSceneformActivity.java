@@ -43,8 +43,15 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.Light;
+import com.google.ar.sceneform.rendering.Material;
+import com.google.ar.sceneform.rendering.MaterialFactory;
+import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.Renderable;
+import com.google.ar.sceneform.rendering.RenderableDefinition;
+import com.google.ar.sceneform.rendering.RenderableInstance;
+import com.google.ar.sceneform.rendering.Vertex;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.rendering.ViewSizer;
 import com.google.ar.sceneform.ux.ArFragment;
@@ -63,6 +70,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private ArFragment arFragment;
     private List<ViewRenderable> viewRenderables = new ArrayList<>();
     private List<ViewRenderable> viewRenderables2 = new ArrayList<>();
+    private ModelRenderable modelRenderable;
 
     private List<CustomPose> poses = new ArrayList<>();
     private List<CustomPose> poses2 = new ArrayList<>();
@@ -77,6 +85,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
     private AnchorNode anchorNode;
     boolean shotOnce;//拍摄一次，首先要移除所有node
     boolean takeOnce;//获取一下图片，然后重新添加node
+    private Material mMaterial;
 
 
     @Override
@@ -96,7 +105,7 @@ public class HelloSceneformActivity extends AppCompatActivity {
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                arFragment.getArSceneView().getRenderer().startMirroring(new Surface(surface),0,0,width,height);
+                arFragment.getArSceneView().getRenderer().startMirroring(new Surface(surface), 0, 0, width, height);
             }
 
             @Override
@@ -160,6 +169,46 @@ public class HelloSceneformActivity extends AppCompatActivity {
 
         }
 
+        MaterialFactory.makeOpaqueWithColor(this, new Color()).thenAccept(material -> {
+            mMaterial = material;
+           // mMaterial.set
+            List<RenderableDefinition.Submesh> submeshes = new ArrayList<>();
+            List<Vertex> vertices = new ArrayList<>();
+            vertices.add(buildVertex(0, 0, 0));
+            vertices.add(buildVertex(0, 0, 1));
+            vertices.add(buildVertex(0, 1, 1));
+            vertices.add(buildVertex(0, 1, 0));
+            vertices.add(buildVertex(0, 1, 0));
+            vertices.add(buildVertex(1, 0, 0));
+            vertices.add(buildVertex(0, 0, 1));
+            vertices.add(buildVertex(1, 1, 1));
+
+
+            submeshes.add(buildSubmesh(0, 1, 3));
+            submeshes.add(buildSubmesh(1, 2, 3));
+            submeshes.add(buildSubmesh(0, 7, 4));
+            submeshes.add(buildSubmesh(0, 3, 7));
+            submeshes.add(buildSubmesh(5, 4, 6));
+            submeshes.add(buildSubmesh(6, 4, 7));
+            submeshes.add(buildSubmesh(2, 6, 3));
+            submeshes.add(buildSubmesh(6, 7, 3));
+            submeshes.add(buildSubmesh(1, 5, 2));
+            submeshes.add(buildSubmesh(2, 5, 6));
+            submeshes.add(buildSubmesh(1, 0, 5));
+            submeshes.add(buildSubmesh(5, 0, 4));
+
+            RenderableDefinition build = RenderableDefinition.builder()
+                .setSubmeshes(submeshes)
+                .setVertices(vertices)
+                .build();
+            ModelRenderable.builder()
+                .setSource(build)
+                .build()
+                .thenAccept(renderable -> {
+                    modelRenderable = renderable;
+                });
+
+        });
 
         arFragment.setOnSessionInitializationListener(new BaseArFragment.OnSessionInitializationListener() {
             @Override
@@ -205,12 +254,12 @@ public class HelloSceneformActivity extends AppCompatActivity {
                     updateNodes();
                 }
 
-                if(takeOnce){
-                    takeOnce =false;
+                if (takeOnce) {
+                    takeOnce = false;
                     ivPreview.setImageBitmap(textureView.getBitmap());
                     anchorNode.addChild(mRootNode);
                 }
-                if(shotOnce){
+                if (shotOnce) {
                     mRootNode.getParent().removeChild(mRootNode);
                     shotOnce = false;
                     takeOnce = true;
@@ -235,6 +284,26 @@ public class HelloSceneformActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private Vertex buildVertex(int i, int i1, int i2) {
+        Vector3 vector3 = new Vector3(i, i1, i2);
+        return Vertex.builder()
+            .setPosition(vector3)
+            .setColor(new Color())
+            //.setNormal(vector3)
+            .build();
+    }
+
+    private RenderableDefinition.Submesh buildSubmesh(int i, int i1, int i2) {
+        List<Integer> triangleIndices = new ArrayList<>();
+        triangleIndices.add(i);
+        triangleIndices.add(i1);
+        triangleIndices.add(i2);
+        return RenderableDefinition.Submesh.builder()
+            .setMaterial(mMaterial)
+            .setTriangleIndices(triangleIndices)
+            .build();
     }
 
     private void tryToShot() {
@@ -300,7 +369,9 @@ public class HelloSceneformActivity extends AppCompatActivity {
             node.setParent(mRootNode);
             node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
             node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
-            node.setRenderable(viewRenderables2.get(i));
+            //node.setRenderable(viewRenderables2.get(i));
+            node.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
+            node.setRenderable(modelRenderable);
         }
 
         anchorNode.addChild(mRootNode);
