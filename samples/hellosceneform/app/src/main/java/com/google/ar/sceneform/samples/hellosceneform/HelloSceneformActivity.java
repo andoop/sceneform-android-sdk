@@ -178,10 +178,10 @@ public class HelloSceneformActivity extends AppCompatActivity {
             vertices.add(buildVertex(0, 0, 1));
             vertices.add(buildVertex(0, 1, 1));
             vertices.add(buildVertex(0, 1, 0));
-            vertices.add(buildVertex(0, 1, 0));
             vertices.add(buildVertex(1, 0, 0));
-            vertices.add(buildVertex(0, 0, 1));
+            vertices.add(buildVertex(1, 0, 1));
             vertices.add(buildVertex(1, 1, 1));
+            vertices.add(buildVertex(1, 1, 0));
 
 
             submeshes.add(buildSubmesh(0, 1, 3));
