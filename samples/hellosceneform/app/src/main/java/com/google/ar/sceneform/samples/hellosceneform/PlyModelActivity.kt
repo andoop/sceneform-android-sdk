@@ -67,7 +67,8 @@ class PlyModelActivity : AppCompatActivity() {
         val translate = floatArrayOf(0f, 0f, 0f)
         val rotate = floatArrayOf(0f, 0f, 0f, 0f)
 
-        val anchor = arFragment?.arSceneView?.session?.createAnchor(Pose(translate, rotate))?:return
+        val anchor = arFragment?.arSceneView?.session?.createAnchor(Pose(translate, rotate))
+                ?: return
         var anchorNode = AnchorNode(anchor)
         anchorNode.setParent(arFragment?.arSceneView?.scene)
         var rootNode = Node()

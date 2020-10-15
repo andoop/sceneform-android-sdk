@@ -56,6 +56,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support.constraint:constraint-layout:2.0.1'
     implementation "org.apache.commons:commons-lang3:3.11"
+    implementation 'com.google.ar.sceneform:assets:1.5.0'
 }
 
 apply plugin: 'com.google.ar.sceneform.plugin'
