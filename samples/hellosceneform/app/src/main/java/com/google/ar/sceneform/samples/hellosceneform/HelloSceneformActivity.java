@@ -218,23 +218,6 @@ public class HelloSceneformActivity extends AppCompatActivity {
             }
         });
 
-        arFragment.getArSceneView().getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-
-            }
-        });
-
         //new SurfaceTexture()
 
         //关闭投影
@@ -369,9 +352,9 @@ public class HelloSceneformActivity extends AppCompatActivity {
             node.setParent(mRootNode);
             node.setLocalPosition(new Vector3(pose.tx(), pose.ty(), pose.tz()));
             node.setLocalRotation(new com.google.ar.sceneform.math.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()));
-            //node.setRenderable(viewRenderables2.get(i));
-            node.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
-            node.setRenderable(modelRenderable);
+            node.setRenderable(viewRenderables2.get(i));
+            /*node.setLocalScale(new Vector3(0.1f,0.1f,0.1f));
+            node.setRenderable(modelRenderable);*/
         }
 
         anchorNode.addChild(mRootNode);
