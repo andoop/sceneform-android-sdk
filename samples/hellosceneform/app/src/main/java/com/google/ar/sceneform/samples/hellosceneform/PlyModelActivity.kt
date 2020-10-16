@@ -38,7 +38,7 @@ class PlyModelActivity : AppCompatActivity() {
             // mMaterial.set
             val submeshes: MutableList<Submesh> = ArrayList()
             val vertices: MutableList<Vertex> = ArrayList()
-            ModelUtils.loadPly(material, vertices, submeshes, filesDir.absolutePath + "/plys/bunny.ply")
+            ModelUtils.loadPly(material, vertices, submeshes, filesDir.absolutePath + "/plys/bunny2.ply")
             val renderableDefinition = RenderableDefinition.builder()
                     .setSubmeshes(submeshes)
                     .setVertices(vertices)

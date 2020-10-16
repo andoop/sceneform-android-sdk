@@ -44,7 +44,8 @@ android {
 dependencies {
 
     // Provides ArFragment, and other Sceneform UX resources:
-    implementation "com.google.ar.sceneform.ux:sceneform-ux:1.15.0"
+    //implementation "com.google.ar.sceneform.ux:sceneform-ux:1.15.0"
+    api project(":ux")
 
     // Use the Sceneform UX Package built from the source files included in the sceneformux folder.
     //api project(":sceneformux")
@@ -56,7 +57,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support.constraint:constraint-layout:2.0.1'
     implementation "org.apache.commons:commons-lang3:3.11"
-    implementation 'com.google.ar.sceneform:assets:1.5.0'
+    //implementation 'com.google.ar.sceneform:assets:1.5.0'
 }
 
 apply plugin: 'com.google.ar.sceneform.plugin'
