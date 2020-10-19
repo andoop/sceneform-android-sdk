@@ -22,6 +22,7 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.TextUtils
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView.SurfaceTextureListener
@@ -65,6 +66,7 @@ class MobileShotActivity : AppCompatActivity() {
     private var takeOnce = false//获取一下图片，然后重新添加node = false
     private var dis = 0.5f
     private var pointsArray = mutableListOf<Map<String, Double>>()
+    private var picInfoString = ""
 
     // CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
@@ -148,7 +150,7 @@ class MobileShotActivity : AppCompatActivity() {
             }
             if (takeOnce) {
                 takeOnce = false
-                ivPreView.setImageBitmap(textureView.bitmap)
+                takePic()
                 anchorNode!!.addChild(mRootNode)
             }
             if (shotOnce) {
@@ -168,6 +170,35 @@ class MobileShotActivity : AppCompatActivity() {
                     tryToShot()
                 }
             }
+        }
+    }
+
+    private fun takePic() {
+        val bitmap = textureView.bitmap
+        ivPreView.setImageBitmap(bitmap)
+        //保持图片到本地
+
+        if(TextUtils.isEmpty(picInfoString)){
+            //增加相机参数
+            var camera = arFragment?.arSceneView?.arFrame?.camera?:return
+            val imageIntrinsics = camera.imageIntrinsics
+
+
+            var viewMatrix = FloatArray(16)
+            var projectMatrix = FloatArray(16)
+
+            camera.getViewMatrix(viewMatrix,0)
+            camera.getViewMatrix(projectMatrix,0)
+
+            Log.i("==========","$imageIntrinsics.focalLength $imageIntrinsics.imageDimensions $imageIntrinsics.principalPoint")
+            picInfoString = "imageResolution\n" +
+                    "${bitmap.width} ${bitmap.height}\n" +
+                    "intrinsics\n" +
+                    "${imageIntrinsics}"
+
+
+        }else{
+
         }
     }
 
