@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         findViewById<Button>(R.id.btShot).setOnClickListener {
-            startActivity(Intent(this@MainActivity, HelloSceneformActivity::class.java))
+            startActivity(Intent(this@MainActivity, MobileShotActivity::class.java))
         }
         findViewById<Button>(R.id.btModel).setOnClickListener {
             startActivity(Intent(this@MainActivity, PlyModelActivity::class.java))

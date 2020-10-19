@@ -47,4 +47,13 @@ public class EulerAngles {
 		q.z = sy * cp * cr - cy * sp * sr;
 		return q;
 	}
+
+    @Override
+    public String toString() {
+        return "EulerAngles{" +
+            "pitch=" + pitch +
+            ", yaw=" + yaw +
+            ", roll=" + roll +
+            '}';
+    }
 }
