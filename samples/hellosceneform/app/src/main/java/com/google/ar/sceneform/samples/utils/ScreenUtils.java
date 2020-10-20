@@ -1,4 +1,4 @@
-package com.google.ar.sceneform.samples.hellosceneform;
+package com.google.ar.sceneform.samples.utils;
 
 import android.content.Context;
 import android.util.DisplayMetrics;

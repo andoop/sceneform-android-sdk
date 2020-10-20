@@ -42,9 +42,9 @@ import com.google.ar.sceneform.rendering.Light
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.ar.sceneform.samples.utils.BitmapUtils
 import com.google.ar.sceneform.samples.utils.FileUtils
+import com.google.ar.sceneform.samples.utils.ScreenUtils
 import com.google.ar.sceneform.ux.ArFragment
 import kotlinx.android.synthetic.main.activity_ux.*
-import kotlinx.coroutines.CoroutineScope
 import java.io.File
 import java.util.*
 import kotlin.math.PI
@@ -77,7 +77,9 @@ class MobileShotActivity : AppCompatActivity() {
     private var filePath = ""
     private var imageFolderPath = ""
     private var imageFolderHdPath = ""
-    var cachedSurface: Surface? = null
+    private var cachedSurface: Surface? = null
+    private var surfaceWidth = 0
+    private var surfaceHeight = 0
 
 
     // CompletableFuture requires api level 24
@@ -102,13 +104,19 @@ class MobileShotActivity : AppCompatActivity() {
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to -30.0))
         totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
 
+        //控制 surface 宽度为屏幕宽度,设置 surface 高宽比为 1.333
+        layoutBottom.layoutParams.height = ScreenUtils.getScreenHeight(this)-(ScreenUtils.getScreenWidth(this)*1.333f).toInt()
+
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
             }
 
             override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+                Log.e("-------","$width $height")
+                surfaceWidth = width
+                surfaceHeight = height
                 cachedSurface = Surface(surface)
-                arFragment!!.arSceneView.renderer!!.startMirroring(cachedSurface, 0, 0, arFragment!!.arSceneView.width, 2340)
+                arFragment!!.arSceneView.renderer!!.startMirroring(cachedSurface, 0, 0, width, height)
             }
 
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
@@ -252,7 +260,7 @@ class MobileShotActivity : AppCompatActivity() {
     private fun tryToShot() {
         val arFrame = arFragment!!.arSceneView.arFrame
         if (arFrame!!.camera.trackingState == TrackingState.TRACKING) {
-            val hitTestResults = arFragment!!.arSceneView.scene.hitTestAll(arFragment!!.arSceneView.scene.camera.screenPointToRay(ScreenUtils.getScreenWidth(this) / 2.toFloat(), ScreenUtils.getScreenHeight(this) / 2.toFloat()))
+            val hitTestResults = arFragment!!.arSceneView.scene.hitTestAll(arFragment!!.arSceneView.scene.camera.screenPointToRay(surfaceWidth / 2.toFloat(), surfaceHeight / 2.toFloat()))
             for (i in hitTestResults.indices) {
                 val hitTestResult = hitTestResults[i]
                 val renderable = hitTestResult.node!!.renderable
