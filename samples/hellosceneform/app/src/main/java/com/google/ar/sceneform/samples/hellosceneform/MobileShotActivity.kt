@@ -53,8 +53,6 @@ class MobileShotActivity : AppCompatActivity() {
     private var arFragment: ArFragment? = null
     private val viewRenderables: MutableList<ViewRenderable> = ArrayList()
     private val viewRenderables2: MutableList<ViewRenderable> = ArrayList()
-    private val poses: MutableList<CustomPose> = ArrayList()
-    private val poses2: MutableList<CustomPose> = ArrayList()
     private var hasCreated = false
     private var hasStartShot = false
     private var mRootNode: Node? = null
@@ -67,6 +65,7 @@ class MobileShotActivity : AppCompatActivity() {
     private var dis = 0.5f
     private var pointsArray = mutableListOf<Map<String, Double>>()
     private var picInfoString = ""
+    private var willShotName = ""
 
     // CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
@@ -75,13 +74,13 @@ class MobileShotActivity : AppCompatActivity() {
         if (!checkIsSupportedDeviceOrFinish(this)) {
             return
         }
-        setContentView (R.layout.activity_ux)
+        setContentView(R.layout.activity_ux)
 
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to 30.0))
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to -30.0))
         var totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
 
-        textureView . surfaceTextureListener = object : SurfaceTextureListener {
+        textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                 arFragment!!.arSceneView.renderer!!.startMirroring(Surface(surface), 0, 0, width, height)
             }
@@ -178,28 +177,37 @@ class MobileShotActivity : AppCompatActivity() {
         ivPreView.setImageBitmap(bitmap)
         //保持图片到本地
 
-        if(TextUtils.isEmpty(picInfoString)){
+        var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
+        val pose = camera.pose
+        var viewMatrix = FloatArray(16)
+        var projectMatrix = FloatArray(16)
+
+        camera.getViewMatrix(viewMatrix, 0)
+        camera.getViewMatrix(projectMatrix, 0)
+
+        if (TextUtils.isEmpty(picInfoString)) {
             //增加相机参数
-            var camera = arFragment?.arSceneView?.arFrame?.camera?:return
-            val imageIntrinsics = camera.imageIntrinsics
-
-
-            var viewMatrix = FloatArray(16)
-            var projectMatrix = FloatArray(16)
-
-            camera.getViewMatrix(viewMatrix,0)
-            camera.getViewMatrix(projectMatrix,0)
-
-            Log.i("==========","$imageIntrinsics.focalLength $imageIntrinsics.imageDimensions $imageIntrinsics.principalPoint")
             picInfoString = "imageResolution\n" +
                     "${bitmap.width} ${bitmap.height}\n" +
                     "intrinsics\n" +
-                    "${imageIntrinsics}"
-
-
-        }else{
-
+                    "${viewMatrix[0]} ${viewMatrix[1]} ${viewMatrix[2]}\n" +
+                    "${viewMatrix[4]} ${viewMatrix[5]} ${viewMatrix[6]}\n" +
+                    "${viewMatrix[8]} ${viewMatrix[9]} ${viewMatrix[10]}\n" +
+                    "${viewMatrix[12]} ${viewMatrix[13]} ${viewMatrix[14]}\n"
         }
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()).ToEulerAngles()
+        picInfoString += "$willShotName\n" +
+                "${pose.tx()} ${pose.ty()} ${pose.tz()} ${eulerAngles.pitch} ${eulerAngles.yaw} ${eulerAngles.roll}\n" +
+                "${projectMatrix[0]} ${projectMatrix[1]} ${projectMatrix[2]} ${projectMatrix[3]}\n" +
+                "${projectMatrix[4]} ${projectMatrix[5]} ${projectMatrix[6]} ${projectMatrix[7]}\n" +
+                "${projectMatrix[8]} ${projectMatrix[9]} ${projectMatrix[10]} ${projectMatrix[11]}\n" +
+                "${projectMatrix[12]} ${projectMatrix[13]} ${projectMatrix[14]} ${projectMatrix[15]}\n" +
+                "${viewMatrix[0]} ${viewMatrix[1]} ${viewMatrix[2]}\n" +
+                "${viewMatrix[4]} ${viewMatrix[5]} ${viewMatrix[6]}\n" +
+                "${viewMatrix[8]} ${viewMatrix[9]} ${viewMatrix[10]}\n" +
+                "${viewMatrix[12]} ${viewMatrix[13]} ${viewMatrix[14]}\n"
+
+        Log.e("--------", picInfoString)
     }
 
     private fun tryToShot() {
@@ -226,7 +234,8 @@ class MobileShotActivity : AppCompatActivity() {
                         if (renderable is ViewRenderable) {
                             val layer = renderable.view.findViewById<ImageView>(R.id.ivLayer)
                             layer.setImageResource(R.drawable.already_shot)
-                            node.name = "shot_" + node.name
+                            willShotName = node.name
+                            node.name = node.name+"_shot"
                             soundPlayer.play(flashSound)
                             shotOnce = true
                         }
@@ -261,7 +270,7 @@ class MobileShotActivity : AppCompatActivity() {
                 val quaternion = eulerAngles.ToQuaternion()
                 node.localRotation = Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
                 node.name = "${j}_${i}-0"
-                node.renderable = viewRenderables[(j*pointCount+i).toInt()]
+                node.renderable = viewRenderables[(j * pointCount + i).toInt()]
 
 
                 val x1 = x * 0.7f
@@ -272,7 +281,7 @@ class MobileShotActivity : AppCompatActivity() {
                 node1.localPosition = Vector3(x1.toFloat(), y1.toFloat(), z1.toFloat())
                 node1.localRotation = Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
                 node1.name = "${j}_${i}-x"
-                node1.renderable = viewRenderables2[(j*pointCount+i).toInt()]
+                node1.renderable = viewRenderables2[(j * pointCount + i).toInt()]
             }
         }
 
