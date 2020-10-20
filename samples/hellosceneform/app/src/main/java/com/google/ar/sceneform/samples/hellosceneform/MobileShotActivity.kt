@@ -19,6 +19,7 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.text.TextUtils
@@ -39,9 +40,12 @@ import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Light
 import com.google.ar.sceneform.rendering.ViewRenderable
+import com.google.ar.sceneform.samples.utils.BitmapUtils
+import com.google.ar.sceneform.samples.utils.FileUtils
 import com.google.ar.sceneform.ux.ArFragment
 import kotlinx.android.synthetic.main.activity_ux.*
 import kotlinx.coroutines.CoroutineScope
+import java.io.File
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.abs
@@ -68,8 +72,13 @@ class MobileShotActivity : AppCompatActivity() {
     private var pointsArray = mutableListOf<Map<String, Double>>()
     private var picInfoString = ""
     private var willShotName = ""
-    var totalPointCount = 0.0
-    var shotCount = 0
+    private var totalPointCount = 0.0
+    private var shotCount = 0
+    private var filePath = ""
+    private var imageFolderPath = ""
+    private var imageFolderHdPath = ""
+    var cachedSurface: Surface? = null
+
 
     // CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
@@ -80,18 +89,29 @@ class MobileShotActivity : AppCompatActivity() {
         }
         setContentView(R.layout.activity_ux)
 
+        BitmapUtils.init(applicationContext, this)
+        filePath = filesDir.absolutePath + File.separator + "project/test"
+        imageFolderPath = filePath + File.separator + "tmp_source_material"
+        imageFolderHdPath = filePath + File.separator + "tmp_source_high"
+        FileUtils.deleteDirection(File(imageFolderPath))
+        FileUtils.deleteDirection(File(imageFolderHdPath))
+        FileUtils.createFolder(imageFolderPath)
+        FileUtils.createFolder(imageFolderHdPath)
+
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to 30.0))
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to -30.0))
         totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
 
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-                arFragment!!.arSceneView.renderer!!.startMirroring(Surface(surface), 0, 0, width, height)
             }
 
-            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
+            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+                cachedSurface = Surface(surface)
+                arFragment!!.arSceneView.renderer!!.startMirroring(cachedSurface, 0, 0, arFragment!!.arSceneView.width, 2340)
+            }
+
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
-                arFragment!!.arSceneView.renderer!!.stopMirroring(Surface(surface))
                 return false
             }
 
@@ -181,6 +201,15 @@ class MobileShotActivity : AppCompatActivity() {
         val bitmap = textureView.bitmap
         ivPreView.setImageBitmap(bitmap)
         //保持图片到本地
+        lifecycleScope.launchWhenStarted {
+            var imageHdPath = imageFolderHdPath + File.separator + "$willShotName.jpg"
+            BitmapUtils.saveFile(imageHdPath, bitmap)
+
+            var imagePath = imageFolderPath + File.separator + "$willShotName.jpg"
+            var height = 240
+            var width = bitmap.width * height / bitmap.height
+            BitmapUtils.saveFile(imagePath, Bitmap.createScaledBitmap(bitmap, width, height, false))
+        }
 
         var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
         val pose = camera.pose
@@ -216,6 +245,7 @@ class MobileShotActivity : AppCompatActivity() {
         if (shotCount >= totalPointCount) {
             Toast.makeText(this, "拍摄完成", Toast.LENGTH_SHORT).show()
             //将 info 写入文件
+            FileUtils.writeFile(picInfoString, imageFolderHdPath + File.separator + "info.txt", false)
         }
     }
 
@@ -318,8 +348,11 @@ class MobileShotActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         soundPlayer.release()
+        cachedSurface?.let {
+            arFragment!!.arSceneView.renderer!!.stopMirroring(cachedSurface)
+        }
+        super.onDestroy()
     }
 
     companion object {
