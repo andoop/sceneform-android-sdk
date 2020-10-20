@@ -173,6 +173,11 @@ public class CircleAnnulusProgressBar extends View {
         mPiePaint.setAntiAlias(true);
     }
 
+    public void setPieColor(int color){
+      mPieColor = color;
+      mPiePaint.setColor(color);
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -272,9 +277,6 @@ public class CircleAnnulusProgressBar extends View {
      * @param progress 要设置的进度
      */
     public synchronized void setProgress(int progress) {
-        if (progress < 0) {
-            progress = 0;
-        }
         this.mProgress = progress;
         //设置进度可能是子线程，所以将重绘调用交给主线程
         postInvalidate();

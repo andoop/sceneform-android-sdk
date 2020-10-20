@@ -20,6 +20,7 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.text.TextUtils
@@ -163,25 +164,8 @@ class MobileShotActivity : AppCompatActivity() {
         //关闭投影
         arFragment!!.arSceneView.scene.sunlight!!.light = Light.builder(Light.Type.POINT).setShadowCastingEnabled(false).build()
         arFragment!!.arSceneView.scene.addOnUpdateListener(OnUpdateListener {
-            if (arFragment!!.arSceneView.arFrame!!.camera.trackingState != TrackingState.TRACKING) {
-                return@OnUpdateListener
-            }
-            if (!hasCreated) {
-                createNodes()
-                hasCreated = true
-            }
-            if (hasCreated) {
-                updateNodes()
-            }
-            if (takeOnce) {
-                takeOnce = false
-                takePic()
-                anchorNode!!.addChild(mRootNode)
-            }
-            if (shotOnce) {
-                mRootNode!!.parent!!.removeChild(mRootNode)
-                shotOnce = false
-                takeOnce = true
+            lifecycleScope.launchWhenStarted {
+                arFrameUpdate()
             }
         })
 
@@ -196,11 +180,90 @@ class MobileShotActivity : AppCompatActivity() {
         }
         timer.callback = object : Timer.Callback {
             override fun onTick() {
-                if (hasStartShot) {
+                if (hasStartShot&&!isShowTip()) {
                     tryToShot()
                 }
             }
         }
+    }
+
+    private fun arFrameUpdate() {
+        if (arFragment!!.arSceneView.arFrame!!.camera.trackingState != TrackingState.TRACKING) {
+            return
+        }
+        if (!hasCreated) {
+            createNodes()
+            hasCreated = true
+        }
+        if (hasCreated) {
+            updateNodes()
+        }
+
+        if (hasStartShot) {
+            tryToTip()
+        }
+        if (takeOnce) {
+            takeOnce = false
+            takePic()
+            anchorNode!!.addChild(mRootNode)
+        }
+        if (shotOnce) {
+            mRootNode!!.parent!!.removeChild(mRootNode)
+            shotOnce = false
+            takeOnce = true
+        }
+    }
+
+    private fun tryToTip() {
+        var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
+        val pose = camera.pose
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()).ToEulerAngles()
+        val rotateZ: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
+        var opt = if (rotateZ > 15 || rotateZ < -15) {
+            0.0
+        } else {
+            1 - (abs(rotateZ) / 15);
+        }
+
+        if (abs(rotateZ) > 15) {
+            pieProgress.setPieColor(Color.parseColor("#ff0000"))
+        } else {
+            pieProgress.setPieColor(Color.parseColor("#0000ff"))
+        }
+        pieProgress.progress = ((rotateZ * 100 / 360).toInt())
+        if (opt <= 0) {
+            showLeanTip()
+        } else {
+            dismissTipCard()
+        }
+
+        mRootNode?.localPosition?.let {
+            if ((it.x - pose.tx()) * (it.x - pose.tx()) +
+                    (it.y - pose.ty()) * (it.y - pose.ty()) +
+                    (it.z - pose.tz()) * (it.z - pose.tz()) > 0.02) {
+                showPositionTip()
+            } else if (opt > 0) {
+                dismissTipCard()
+            }
+        }
+    }
+
+    private fun isShowTip(): Boolean {
+        return tipCard.visibility == View.VISIBLE
+    }
+
+    //倾斜提示
+    private fun showLeanTip() {
+        tipCard.visibility = View.VISIBLE
+        tipCard.setCardBackgroundColor(Color.parseColor("#d97635"))
+        tvTip.text = "请保持手机竖直拍摄"
+    }
+
+    //位置偏移提示
+    private fun showPositionTip() {
+        tipCard.visibility = View.VISIBLE
+        tipCard.setCardBackgroundColor(Color.parseColor("#d97635"))
+        tvTip.text = "保持手机位置不变，拍摄者围绕手机转动"
     }
 
     private fun showShotTip() {

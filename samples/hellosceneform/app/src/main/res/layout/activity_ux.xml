@@ -48,7 +48,7 @@
             android:layout_height="70dp"
             android:layout_gravity="center"
             app:outer_circle_border_width="0dp"
-            app:progress="-10"/>
+            app:progress="0"/>
 
         <ImageView
             android:layout_width="110dp"
@@ -94,7 +94,7 @@
         <androidx.cardview.widget.CardView
             android:id="@+id/tipCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="70dp"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
             android:layout_marginRight="10dp"
@@ -105,10 +105,11 @@
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:paddingLeft="15dp"
                 android:paddingTop="10dp"
                 android:paddingRight="15dp"
+                android:layout_gravity="center_vertical"
                 android:paddingBottom="10dp">
 
                 <TextView
