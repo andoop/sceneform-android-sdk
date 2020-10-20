@@ -105,14 +105,14 @@ class MobileShotActivity : AppCompatActivity() {
         totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
 
         //控制 surface 宽度为屏幕宽度,设置 surface 高宽比为 1.333
-        layoutBottom.layoutParams.height = ScreenUtils.getScreenHeight(this)-(ScreenUtils.getScreenWidth(this)*1.333f).toInt()
+        layoutBottom.layoutParams.height = ScreenUtils.getScreenHeight(this) - (ScreenUtils.getScreenWidth(this) * 1.333f).toInt()
 
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
             }
 
             override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-                Log.e("-------","$width $height")
+                Log.e("-------", "$width $height")
                 surfaceWidth = width
                 surfaceHeight = height
                 cachedSurface = Surface(surface)
@@ -184,11 +184,14 @@ class MobileShotActivity : AppCompatActivity() {
                 takeOnce = true
             }
         })
+
+        showShotTip()
         findViewById<View>(R.id.btShot).setOnClickListener { v ->
             hasStartShot = true
             v.visibility = View.GONE
             tvProgress.visibility = View.VISIBLE
             tvProgress.text = "拍摄进度 $shotCount/${totalPointCount.toInt()}"
+            dismissTipCard()
             timer.star()
         }
         timer.callback = object : Timer.Callback {
@@ -198,6 +201,14 @@ class MobileShotActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showShotTip() {
+        tipCard.visibility = View.VISIBLE
+    }
+
+    private fun dismissTipCard() {
+        tipCard.visibility = View.GONE
     }
 
     private fun takePic() {
