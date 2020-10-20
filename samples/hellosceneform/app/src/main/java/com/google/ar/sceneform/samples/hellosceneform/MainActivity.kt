@@ -2,10 +2,8 @@ package com.google.ar.sceneform.samples.hellosceneform
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.Button
-import com.google.ar.sceneform.samples.dice.DiceActivity
-import com.google.ar.sceneform.samples.modeltest.ModelActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.google.ar.sceneform.samples.utils.CommonUtils
 
 class MainActivity : AppCompatActivity() {

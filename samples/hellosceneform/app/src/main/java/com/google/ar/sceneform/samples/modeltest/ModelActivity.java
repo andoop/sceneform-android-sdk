@@ -2,9 +2,10 @@ package com.google.ar.sceneform.samples.modeltest;
 
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class ModelActivity extends AppCompatActivity {
 

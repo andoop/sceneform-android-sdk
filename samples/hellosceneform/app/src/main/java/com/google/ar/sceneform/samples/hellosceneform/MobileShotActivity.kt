@@ -21,7 +21,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.text.TextUtils
 import android.util.Log
 import android.view.Surface
@@ -29,6 +28,8 @@ import android.view.TextureView.SurfaceTextureListener
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.AnchorNode
@@ -40,6 +41,7 @@ import com.google.ar.sceneform.rendering.Light
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.ar.sceneform.ux.ArFragment
 import kotlinx.android.synthetic.main.activity_ux.*
+import kotlinx.coroutines.CoroutineScope
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.abs
@@ -66,6 +68,8 @@ class MobileShotActivity : AppCompatActivity() {
     private var pointsArray = mutableListOf<Map<String, Double>>()
     private var picInfoString = ""
     private var willShotName = ""
+    var totalPointCount = 0.0
+    var shotCount = 0
 
     // CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
@@ -78,7 +82,7 @@ class MobileShotActivity : AppCompatActivity() {
 
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to 30.0))
         pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to -30.0))
-        var totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
+        totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
 
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
@@ -173,6 +177,7 @@ class MobileShotActivity : AppCompatActivity() {
     }
 
     private fun takePic() {
+        shotCount++
         val bitmap = textureView.bitmap
         ivPreView.setImageBitmap(bitmap)
         //保持图片到本地
@@ -207,7 +212,11 @@ class MobileShotActivity : AppCompatActivity() {
                 "${viewMatrix[8]} ${viewMatrix[9]} ${viewMatrix[10]}\n" +
                 "${viewMatrix[12]} ${viewMatrix[13]} ${viewMatrix[14]}\n"
 
-        Log.e("--------", picInfoString)
+        //Log.e("--------", picInfoString)
+        if (shotCount >= totalPointCount) {
+            Toast.makeText(this, "拍摄完成", Toast.LENGTH_SHORT).show()
+            //将 info 写入文件
+        }
     }
 
     private fun tryToShot() {
@@ -235,7 +244,7 @@ class MobileShotActivity : AppCompatActivity() {
                             val layer = renderable.view.findViewById<ImageView>(R.id.ivLayer)
                             layer.setImageResource(R.drawable.already_shot)
                             willShotName = node.name
-                            node.name = node.name+"_shot"
+                            node.name = node.name + "_shot"
                             soundPlayer.play(flashSound)
                             shotOnce = true
                         }
