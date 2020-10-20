@@ -160,12 +160,6 @@ class MobileShotActivity : AppCompatActivity() {
                     .build()
                     .thenAccept { renderable: ViewRenderable -> viewRenderables2.add(renderable) }
         }
-        arFragment!!.setOnSessionInitializationListener {
-
-        }
-
-        //new SurfaceTexture()
-
         //关闭投影
         arFragment!!.arSceneView.scene.sunlight!!.light = Light.builder(Light.Type.POINT).setShadowCastingEnabled(false).build()
         arFragment!!.arSceneView.scene.addOnUpdateListener(OnUpdateListener {
@@ -193,6 +187,8 @@ class MobileShotActivity : AppCompatActivity() {
         findViewById<View>(R.id.btShot).setOnClickListener { v ->
             hasStartShot = true
             v.visibility = View.GONE
+            tvProgress.visibility = View.VISIBLE
+            tvProgress.text = "拍摄进度 $shotCount/${totalPointCount.toInt()}"
             timer.star()
         }
         timer.callback = object : Timer.Callback {
@@ -206,6 +202,7 @@ class MobileShotActivity : AppCompatActivity() {
 
     private fun takePic() {
         shotCount++
+        tvProgress.text = "拍摄进度 $shotCount/${totalPointCount.toInt()}"
         val bitmap = textureView.bitmap
         ivPreView.setImageBitmap(bitmap)
         //保持图片到本地
