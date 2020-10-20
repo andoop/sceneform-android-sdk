@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircleAnnulusProgressBar">
+        <!--当前进度值-->
+        <attr name="progress" format="integer" />
+        <!--进度的最大值-->
+        <attr name="max" format="integer" />
+        <!--外圆的颜色-->
+        <attr name="outer_circle_color" format="reference|color" />
+        <!--内饼图的颜色-->
+        <attr name="pie_color" format="reference|color" />
+        <!--外圆轮廓的宽度-->
+        <attr name="outer_circle_border_width" format="dimension" />
+    </declare-styleable>
+</resources>
