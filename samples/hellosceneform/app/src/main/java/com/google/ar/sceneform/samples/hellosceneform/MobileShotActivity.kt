@@ -180,7 +180,7 @@ class MobileShotActivity : AppCompatActivity() {
         }
         timer.callback = object : Timer.Callback {
             override fun onTick() {
-                if (hasStartShot&&!isShowTip()) {
+                if (hasStartShot && !isShowTip()) {
                     tryToShot()
                 }
             }
@@ -217,8 +217,8 @@ class MobileShotActivity : AppCompatActivity() {
     private fun tryToTip() {
         var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
         val pose = camera.pose
-        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()).ToEulerAngles()
-        val rotateZ: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
+        val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
         var opt = if (rotateZ > 15 || rotateZ < -15) {
             0.0
         } else {
@@ -308,7 +308,7 @@ class MobileShotActivity : AppCompatActivity() {
                     "${viewMatrix[8]} ${viewMatrix[9]} ${viewMatrix[10]}\n" +
                     "${viewMatrix[12]} ${viewMatrix[13]} ${viewMatrix[14]}\n"
         }
-        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw()).ToEulerAngles()
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
         picInfoString += "$willShotName\n" +
                 "${pose.tx()} ${pose.ty()} ${pose.tz()} ${eulerAngles.pitch} ${eulerAngles.yaw} ${eulerAngles.roll}\n" +
                 "${projectMatrix[0]} ${projectMatrix[1]} ${projectMatrix[2]} ${projectMatrix[3]}\n" +

@@ -7,9 +7,9 @@ public class EulerAngles {
 	public float roll;
 
 	public EulerAngles(float pitch, float yaw, float roll) {
-		this.pitch = pitch;
-		this.yaw = yaw;
-		this.roll = roll;
+		this.pitch = pitch;//y
+		this.yaw = yaw;//z
+		this.roll = roll;//x
 	}
 
 	public EulerAngles(float w, float x, float y, float z) {
