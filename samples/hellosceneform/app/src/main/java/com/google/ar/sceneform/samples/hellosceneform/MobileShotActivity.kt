@@ -37,6 +37,7 @@ import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.Scene.OnUpdateListener
+import com.google.ar.sceneform.math.Matrix
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Light
@@ -215,22 +216,39 @@ class MobileShotActivity : AppCompatActivity() {
     }
 
     private fun tryToTip() {
+        //test()
+
+
         var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
         val pose = camera.pose
-        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
+        val eulerAngles1 = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
+        val rotateX1: Double = (eulerAngles1.roll + PI / 2) * (180.0 / PI)
+        val rotateY1: Double = (eulerAngles1.pitch + PI / 2) * (180.0 / PI)
+        val rotateZ1: Double = (eulerAngles1.yaw + PI / 2) * (180.0 / PI)
+
+        var axisAngle = Quaternion.axisAngle(Vector3.up(), rotateX1.toFloat())
+        var axisAngle2 =Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz())
+        axisAngle = Quaternion.multiply(axisAngle2,axisAngle)
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(axisAngle.w,axisAngle.x, axisAngle.y, axisAngle.z).ToEulerAngles()
+        val rotateX: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
+        val rotateY: Double = (eulerAngles.pitch + PI / 2) * (180.0 / PI)
         val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
-        var opt = if (rotateZ > 15 || rotateZ < -15) {
+
+        var rotate = rotateY - 90
+        //Log.e("lllllllllll","${rotateX.toInt()} ${rotateY.toInt()} ${rotateZ.toInt()}")
+
+        var opt = if (rotate > 15 || rotate < -15) {
             0.0
         } else {
-            1 - (abs(rotateZ) / 15);
+            1 - (abs(rotate) / 15);
         }
 
-        if (abs(rotateZ) > 15) {
+        if (abs(rotate) > 15) {
             pieProgress.setPieColor(Color.parseColor("#ff0000"))
         } else {
             pieProgress.setPieColor(Color.parseColor("#0000ff"))
         }
-        pieProgress.progress = ((rotateZ * 100 / 360).toInt())
+        pieProgress.progress = ((rotate * 100 / 360).toInt())
         if (opt <= 0) {
             showLeanTip()
         } else {
@@ -246,6 +264,25 @@ class MobileShotActivity : AppCompatActivity() {
                 dismissTipCard()
             }
         }
+    }
+
+    private fun test() {
+        var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
+        val pose = camera.pose
+        val eulerAngles1 = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
+        val rotateX1: Double = (eulerAngles1.roll + PI / 2) * (180.0 / PI)
+        val rotateY1: Double = (eulerAngles1.pitch + PI / 2) * (180.0 / PI)
+        val rotateZ1: Double = (eulerAngles1.yaw + PI / 2) * (180.0 / PI)
+
+        var axisAngle = Quaternion.axisAngle(Vector3.up(), rotateX1.toFloat())
+        var axisAngle2 =Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz())
+        axisAngle = Quaternion.multiply(axisAngle2,axisAngle)
+        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(axisAngle.w,axisAngle.x, axisAngle.y, axisAngle.z).ToEulerAngles()
+        val rotateX: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
+        val rotateY: Double = (eulerAngles.pitch + PI / 2) * (180.0 / PI)
+        val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
+
+        Log.e("lllllllllll","${rotateX.toInt()} ${rotateY.toInt()} ${rotateZ.toInt()}")
     }
 
     private fun isShowTip(): Boolean {
