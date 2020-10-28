@@ -15,7 +15,6 @@
  */
 package com.google.ar.sceneform.samples.hellosceneform
 
-import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
@@ -28,60 +27,38 @@ import android.util.Log
 import android.view.Surface
 import android.view.TextureView.SurfaceTextureListener
 import android.view.View
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
-import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.Scene.OnUpdateListener
-import com.google.ar.sceneform.math.Matrix
-import com.google.ar.sceneform.math.Quaternion
-import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Light
-import com.google.ar.sceneform.rendering.ViewRenderable
+import com.google.ar.sceneform.samples.scene.MobileShotScene
 import com.google.ar.sceneform.samples.utils.BitmapUtils
 import com.google.ar.sceneform.samples.utils.FileUtils
 import com.google.ar.sceneform.samples.utils.ScreenUtils
 import com.google.ar.sceneform.ux.ArFragment
 import kotlinx.android.synthetic.main.activity_ux.*
 import java.io.File
-import java.util.*
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * This is an example activity that uses the Sceneform UX package to make common AR tasks easier.
  */
 class MobileShotActivity : AppCompatActivity() {
     private var arFragment: ArFragment? = null
-    private val viewRenderables: MutableList<ViewRenderable> = ArrayList()
-    private val viewRenderables2: MutableList<ViewRenderable> = ArrayList()
-    private var hasCreated = false
     private var hasStartShot = false
-    private var mRootNode: Node? = null
     private val timer = Timer()
     private val soundPlayer = SoundPlayer()
     private var flashSound = 0
-    private var anchorNode: AnchorNode? = null
-    private var shotOnce = false //拍摄一次，首先要移除所有node = false
-    private var takeOnce = false//获取一下图片，然后重新添加node = false
-    private var dis = 0.5f
-    private var pointsArray = mutableListOf<Map<String, Double>>()
     private var picInfoString = ""
-    private var willShotName = ""
-    private var totalPointCount = 0.0
     private var shotCount = 0
     private var filePath = ""
     private var imageFolderPath = ""
     private var imageFolderHdPath = ""
     private var cachedSurface: Surface? = null
-    private var surfaceWidth = 0
-    private var surfaceHeight = 0
+    private var mobileShotScene: MobileShotScene? = null
+    private var opt = 0.0
 
 
     // CompletableFuture requires api level 24
@@ -92,7 +69,6 @@ class MobileShotActivity : AppCompatActivity() {
             return
         }
         setContentView(R.layout.activity_ux)
-
         BitmapUtils.init(applicationContext, this)
         filePath = filesDir.absolutePath + File.separator + "project/test"
         imageFolderPath = filePath + File.separator + "tmp_source_material"
@@ -102,18 +78,11 @@ class MobileShotActivity : AppCompatActivity() {
         FileUtils.createFolder(imageFolderPath)
         FileUtils.createFolder(imageFolderHdPath)
 
-        pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to 30.0))
-        pointsArray.add(mapOf("pointCount" to 12.0, "pitchAngle" to -30.0))
-        totalPointCount = pointsArray[0]["pointCount"]!! + pointsArray[1]["pointCount"]!!
-
         //控制 surface 宽度为屏幕宽度,设置 surface 高宽比为 1.333
         layoutBottom.layoutParams.height = ScreenUtils.getScreenHeight(this) - (ScreenUtils.getScreenWidth(this) * 1.333f).toInt()
-
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-                Log.e("-------", "$width $height")
-                surfaceWidth = width
-                surfaceHeight = height
+                mobileShotScene?.onSurfaceSizeChanged(width, height)
                 cachedSurface = Surface(surface)
                 arFragment!!.arSceneView.renderer!!.startMirroring(cachedSurface, 0, 0, width, height)
             }
@@ -129,6 +98,7 @@ class MobileShotActivity : AppCompatActivity() {
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
         }
         arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
+
         if (arFragment!!.planeDiscoveryController != null) {
             arFragment!!.planeDiscoveryController.hide()
             arFragment!!.planeDiscoveryController.setInstructionView(null)
@@ -137,32 +107,6 @@ class MobileShotActivity : AppCompatActivity() {
 
         //去除平面纹理
         arFragment!!.arSceneView.planeRenderer.isEnabled = false
-        //初始化24个纹理
-        for (i in 0 until totalPointCount.toInt()) {
-            ViewRenderable.builder()
-                    .setView(this, R.layout.layout_aim_shot)
-                    .setSizer {
-                        val vector3 = Vector3()
-                        vector3.x = 0.055f
-                        vector3.y = 0.055f
-                        vector3
-                    }
-                    .build()
-                    .thenAccept { renderable: ViewRenderable -> viewRenderables.add(renderable) }
-        }
-        //初始化24个 circle 纹理
-        for (i in 0 until totalPointCount.toInt()) {
-            ViewRenderable.builder()
-                    .setView(this, R.layout.layout_shot_circle)
-                    .setSizer {
-                        val vector3 = Vector3()
-                        vector3.x = 0.045f
-                        vector3.y = 0.045f
-                        vector3
-                    }
-                    .build()
-                    .thenAccept { renderable: ViewRenderable -> viewRenderables2.add(renderable) }
-        }
         //关闭投影
         arFragment!!.arSceneView.scene.sunlight!!.light = Light.builder(Light.Type.POINT).setShadowCastingEnabled(false).build()
         arFragment!!.arSceneView.scene.addOnUpdateListener(OnUpdateListener {
@@ -176,69 +120,51 @@ class MobileShotActivity : AppCompatActivity() {
             hasStartShot = true
             v.visibility = View.GONE
             tvProgress.visibility = View.VISIBLE
-            tvProgress.text = "拍摄进度 $shotCount/${totalPointCount.toInt()}"
+            tvProgress.text = "拍摄进度 $shotCount/${mobileShotScene?.totalPointCount ?: 0}"
             dismissTipCard()
             timer.star()
+            mobileShotScene?.startShot()
         }
         timer.callback = object : Timer.Callback {
             override fun onTick() {
                 if (hasStartShot && !isShowTip()) {
-                    tryToShot()
+                    mobileShotScene?.tryToShot()
                 }
             }
         }
+        initShotScene()
     }
 
-    private fun arFrameUpdate() {
-        if (arFragment!!.arSceneView.arFrame!!.camera.trackingState != TrackingState.TRACKING) {
-            return
-        }
-        if (!hasCreated) {
-            createNodes()
-            hasCreated = true
-        }
-        if (hasCreated) {
-            updateNodes()
-        }
+    private fun initShotScene() {
+        mobileShotScene = MobileShotScene.Builder()
+                .arFragment(arFragment)
+                .pointNum(24)
+                .pitchAngle(30)
+                .shotLayoutRes(R.layout.layout_aim_shot)
+                .shotAimLayoutRes(R.layout.layout_shot_circle)
+                .leanCall {
+                    onLean(it)
+                }
+                .positionCall {
+                    onDistanceChange(it)
+                }
+                .shotCall {
+                    takePic(it)
+                }
+                .build()
+        mobileShotScene?.init(this)
+    }
 
-        if (hasStartShot) {
-            tryToTip()
-        }
-        if (takeOnce) {
-            takeOnce = false
-            takePic()
-            anchorNode!!.addChild(mRootNode)
-        }
-        if (shotOnce) {
-            mRootNode!!.parent!!.removeChild(mRootNode)
-            shotOnce = false
-            takeOnce = true
+    private fun onDistanceChange(dis: Double) {
+        if (dis > 0.02) {
+            showPositionTip()
+        } else if (opt > 0) {
+            dismissTipCard()
         }
     }
 
-    private fun tryToTip() {
-        //test()
-
-
-        var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
-        val pose = camera.pose
-        val eulerAngles1 = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
-        val rotateX1: Double = (eulerAngles1.roll + PI / 2) * (180.0 / PI)
-        val rotateY1: Double = (eulerAngles1.pitch + PI / 2) * (180.0 / PI)
-        val rotateZ1: Double = (eulerAngles1.yaw + PI / 2) * (180.0 / PI)
-
-        var axisAngle = Quaternion.axisAngle(Vector3.up(), rotateX1.toFloat())
-        var axisAngle2 =Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz())
-        axisAngle = Quaternion.multiply(axisAngle2,axisAngle)
-        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(axisAngle.w,axisAngle.x, axisAngle.y, axisAngle.z).ToEulerAngles()
-        val rotateX: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
-        val rotateY: Double = (eulerAngles.pitch + PI / 2) * (180.0 / PI)
-        val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
-
-        var rotate = 90-rotateY
-        //Log.e("lllllllllll","${rotateX.toInt()} ${rotateY.toInt()} ${rotateZ.toInt()}")
-
-        var opt = if (rotate > 15 || rotate < -15) {
+    private fun onLean(rotate: Double) {
+        opt = if (rotate > 15 || rotate < -15) {
             0.0
         } else {
             1 - (abs(rotate) / 15);
@@ -255,35 +181,13 @@ class MobileShotActivity : AppCompatActivity() {
         } else {
             dismissTipCard()
         }
-
-        mRootNode?.localPosition?.let {
-            if ((it.x - pose.tx()) * (it.x - pose.tx()) +
-                    (it.y - pose.ty()) * (it.y - pose.ty()) +
-                    (it.z - pose.tz()) * (it.z - pose.tz()) > 0.02) {
-                showPositionTip()
-            } else if (opt > 0) {
-                dismissTipCard()
-            }
-        }
     }
 
-    private fun test() {
-        var camera = arFragment?.arSceneView?.arFrame?.camera ?: return
-        val pose = camera.pose
-        val eulerAngles1 = com.google.ar.sceneform.samples.hellosceneform.Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz()).ToEulerAngles()
-        val rotateX1: Double = (eulerAngles1.roll + PI / 2) * (180.0 / PI)
-        val rotateY1: Double = (eulerAngles1.pitch + PI / 2) * (180.0 / PI)
-        val rotateZ1: Double = (eulerAngles1.yaw + PI / 2) * (180.0 / PI)
-
-        var axisAngle = Quaternion.axisAngle(Vector3.up(), rotateX1.toFloat())
-        var axisAngle2 =Quaternion(pose.qw(), pose.qx(), pose.qy(), pose.qz())
-        axisAngle = Quaternion.multiply(axisAngle2,axisAngle)
-        val eulerAngles = com.google.ar.sceneform.samples.hellosceneform.Quaternion(axisAngle.w,axisAngle.x, axisAngle.y, axisAngle.z).ToEulerAngles()
-        val rotateX: Double = (eulerAngles.roll + PI / 2) * (180.0 / PI)
-        val rotateY: Double = (eulerAngles.pitch + PI / 2) * (180.0 / PI)
-        val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
-
-        Log.e("lllllllllll","${rotateX.toInt()} ${rotateY.toInt()} ${rotateZ.toInt()}")
+    private fun arFrameUpdate() {
+        if (arFragment!!.arSceneView.arFrame!!.camera.trackingState != TrackingState.TRACKING) {
+            return
+        }
+        mobileShotScene?.onFrameUpdate()
     }
 
     private fun isShowTip(): Boolean {
@@ -312,9 +216,30 @@ class MobileShotActivity : AppCompatActivity() {
         tipCard.visibility = View.GONE
     }
 
-    private fun takePic() {
+    override fun onResume() {
+        super.onResume()
+        if (hasStartShot) {
+            timer.star()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        timer.stop()
+    }
+
+    override fun onDestroy() {
+        soundPlayer.release()
+        cachedSurface?.let {
+            arFragment!!.arSceneView.renderer!!.stopMirroring(cachedSurface)
+        }
+        super.onDestroy()
+    }
+
+    private fun takePic(willShotName: String) {
+        soundPlayer.play(flashSound)
         shotCount++
-        tvProgress.text = "拍摄进度 $shotCount/${totalPointCount.toInt()}"
+        tvProgress.text = "拍摄进度 $shotCount/${mobileShotScene?.totalPointCount ?: 0}"
         val bitmap = textureView.bitmap
         ivPreView.setImageBitmap(bitmap)
         //保持图片到本地
@@ -358,118 +283,11 @@ class MobileShotActivity : AppCompatActivity() {
                 "${viewMatrix[8]} ${viewMatrix[9]} ${viewMatrix[10]}\n" +
                 "${viewMatrix[12]} ${viewMatrix[13]} ${viewMatrix[14]}\n"
 
-        //Log.e("--------", picInfoString)
-        if (shotCount >= totalPointCount) {
+        if (shotCount >= mobileShotScene!!.totalPointCount) {
             Toast.makeText(this, "拍摄完成", Toast.LENGTH_SHORT).show()
             //将 info 写入文件
             FileUtils.writeFile(picInfoString, imageFolderHdPath + File.separator + "info.txt", false)
         }
-    }
-
-    private fun tryToShot() {
-        val arFrame = arFragment!!.arSceneView.arFrame
-        if (arFrame!!.camera.trackingState == TrackingState.TRACKING) {
-            val hitTestResults = arFragment!!.arSceneView.scene.hitTestAll(arFragment!!.arSceneView.scene.camera.screenPointToRay(surfaceWidth / 2.toFloat(), surfaceHeight / 2.toFloat()))
-            for (i in hitTestResults.indices) {
-                val hitTestResult = hitTestResults[i]
-                val renderable = hitTestResult.node!!.renderable
-                if (renderable is ViewRenderable) {
-                    val layer = renderable.view.findViewById<ImageView>(R.id.ivLayer)
-                    val alpha = ObjectAnimator.ofFloat(layer, "alpha", 0f, 1f)
-                    alpha.duration = 100
-                    alpha.repeatCount = 1
-                    alpha.start()
-                }
-            }
-            if (hitTestResults.size == 2 && hitTestResults[0].node!!.name.endsWith("-x") && hitTestResults[1].node!!.name.endsWith("-0")) {
-                for (i in hitTestResults.indices) {
-                    val hitTestResult = hitTestResults[i]
-                    val node = hitTestResult.node
-                    if (node!!.name.endsWith("-0")) {
-                        val renderable = node.renderable
-                        if (renderable is ViewRenderable) {
-                            val layer = renderable.view.findViewById<ImageView>(R.id.ivLayer)
-                            layer.setImageResource(R.drawable.already_shot)
-                            willShotName = node.name
-                            node.name = node.name + "_shot"
-                            soundPlayer.play(flashSound)
-                            shotOnce = true
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun createNodes() {
-        val translate = floatArrayOf(0f, 0f, 0f)
-        val rotate = floatArrayOf(0f, 0f, 0f, 0f)
-        val anchor = arFragment!!.arSceneView.session!!.createAnchor(Pose(translate, rotate))
-        anchorNode = AnchorNode(anchor)
-        anchorNode?.setParent(arFragment!!.arSceneView.scene)
-        mRootNode = Node()
-
-        for (j in 0 until pointsArray.size) {
-            val pitchAngle = pointsArray[j]["pitchAngle"] ?: continue
-            val pointCount = pointsArray[j]["pointCount"] ?: continue
-            var angle = Math.toRadians(pitchAngle)
-            val perAngle: Double = PI * 2.0f / pointCount
-            for (i in 0 until pointCount.toInt()) {
-                val x = dis * cos(angle) * cos(i * perAngle)
-                val y = dis * sin(angle)
-                val z = dis * cos(angle) * sin(i * perAngle)
-
-                val node = Node()
-                node.setParent(mRootNode)
-                node.localPosition = Vector3(x.toFloat(), y.toFloat(), z.toFloat())
-                val eulerAngles = EulerAngles(Math.toRadians(360 - abs(pitchAngle) * i - 90.toDouble()).toFloat(), 0F, Math.toRadians(pitchAngle).toFloat())
-                val quaternion = eulerAngles.ToQuaternion()
-                node.localRotation = Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
-                node.name = "${j}_${i}-0"
-                node.renderable = viewRenderables[(j * pointCount + i).toInt()]
-
-
-                val x1 = x * 0.7f
-                val y1 = y * 0.7f
-                val z1 = z * 0.7f
-                val node1 = Node()
-                node1.setParent(mRootNode)
-                node1.localPosition = Vector3(x1.toFloat(), y1.toFloat(), z1.toFloat())
-                node1.localRotation = Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
-                node1.name = "${j}_${i}-x"
-                node1.renderable = viewRenderables2[(j * pointCount + i).toInt()]
-            }
-        }
-
-        anchorNode?.addChild(mRootNode)
-
-    }
-
-    private fun updateNodes() {
-        if (!hasStartShot) {
-            val localPosition = arFragment!!.arSceneView.scene.camera.localPosition
-            mRootNode!!.localPosition = localPosition
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (hasStartShot) {
-            timer.star()
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        timer.stop()
-    }
-
-    override fun onDestroy() {
-        soundPlayer.release()
-        cachedSurface?.let {
-            arFragment!!.arSceneView.renderer!!.stopMirroring(cachedSurface)
-        }
-        super.onDestroy()
     }
 
     companion object {
