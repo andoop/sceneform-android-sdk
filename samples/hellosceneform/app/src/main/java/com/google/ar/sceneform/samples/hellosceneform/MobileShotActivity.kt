@@ -116,6 +116,11 @@ class MobileShotActivity : AppCompatActivity() {
         })
 
         showShotTip()
+        initViews()
+        initShotScene()
+    }
+
+    private fun initViews() {
         findViewById<View>(R.id.btShot).setOnClickListener { v ->
             hasStartShot = true
             v.visibility = View.GONE
@@ -132,7 +137,15 @@ class MobileShotActivity : AppCompatActivity() {
                 }
             }
         }
-        initShotScene()
+        btBack.setOnClickListener {
+            finish()
+        }
+        videoGuide.setOnClickListener {
+
+        }
+        arGuide.setOnClickListener {
+
+        }
     }
 
     private fun initShotScene() {
