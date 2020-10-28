@@ -111,14 +111,15 @@ class MobileShotActivity : AppCompatActivity() {
 
         textureView.surfaceTextureListener = object : SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-            }
-
-            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
                 Log.e("-------", "$width $height")
                 surfaceWidth = width
                 surfaceHeight = height
                 cachedSurface = Surface(surface)
                 arFragment!!.arSceneView.renderer!!.startMirroring(cachedSurface, 0, 0, width, height)
+            }
+
+            override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+
             }
 
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
@@ -234,7 +235,7 @@ class MobileShotActivity : AppCompatActivity() {
         val rotateY: Double = (eulerAngles.pitch + PI / 2) * (180.0 / PI)
         val rotateZ: Double = (eulerAngles.yaw + PI / 2) * (180.0 / PI)
 
-        var rotate = rotateY - 90
+        var rotate = 90-rotateY
         //Log.e("lllllllllll","${rotateX.toInt()} ${rotateY.toInt()} ${rotateZ.toInt()}")
 
         var opt = if (rotate > 15 || rotate < -15) {
